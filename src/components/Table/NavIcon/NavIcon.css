@@ -1,0 +1,13 @@
+.arrow {
+    display: inline-block;
+    height: 15px;
+    width: 15px;
+
+    overflow: hidden;
+    border-radius: 50%;
+    background: #fdfdfe;
+}
+
+.down {
+    transform: rotate(180deg);
+}
