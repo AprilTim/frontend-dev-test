@@ -1,26 +1,241 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {Component} from 'react';
 import './App.css';
+import Table from "./components/Table/Table";
+import _ from 'lodash';
+import DeitailInfo from "./components/Detail_Info/DeitailInfo";
+import ModeSelector from "./components/ModeSelector/ModeSelector";
+import ReactPaginate from 'react-paginate'
+import Loader from "./components/Loader/Loader";
+import TableSearch from "./components/TableSearch/TableSearch";
+import Form from "./components/Form/Form";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+class App extends Component {
+
+    state = {
+        formPage: {
+            id: '',
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: ''
+        },
+        isValidForm: false,
+        isForm: false,
+        isModeSelected: false,
+        isLoading: false,
+        data: [],
+        search: '',
+        sort: 'desc',
+        sortField: '',
+        row: null,
+        btnName: "Добавить",
+        currentPage: 0,
+    }
+
+    async fetchData(url) {
+        const response = await fetch(url)
+        const data = await response.json()
+        console.log(data)
+        this.setState({
+            isLoading: false,
+            data: _.orderBy(data, this.state.sortField, this.state.sort)
+        })
+    }
+
+    onSort = sortField => {
+        const cloneData = this.state.data.concat()
+        const sortType = this.state.sort === 'asc' ? 'desc' : 'asc';
+        const orderedData = _.orderBy(cloneData, sortField, sortType);
+
+        this.setState({
+            data: orderedData,
+            sort: sortType,
+            sortField
+        })
+
+    }
+
+    openForm = (isForm) => {
+        isForm = this.state.isForm
+        isForm = !isForm
+        const check = this.state.btnName === "Добавить" ? "Закрыть" : "Добавить"
+        this.setState({
+            isForm: isForm,
+            btnName: check
+        })
+    }
+
+    updateForm = (text, check) => {
+        this.setState({
+            formPage: {
+                id: check === "id" ? text : this.state.formPage.id,
+                firstName: check === "firstName" ? text : this.state.formPage.firstName,
+                lastName: check === "lastName" ? text : this.state.formPage.lastName,
+                email: check === "email" ? text : this.state.formPage.email,
+                phone: check === "phone" ? text : this.state.formPage.phone,
+            }
+        })
+
+        this.checkFormPage(this.state.formPage)
+
+    }
+
+    checkFormPage = (checkValue) =>{
+
+        if(checkValue.id != ''
+            && checkValue.firstName != ''
+            && checkValue.lastName != ''
+            && checkValue.email != ''
+            && checkValue.phone != ''){
+            this.setState({
+                isValidform: true
+            })
+        }else {
+            this.setState({
+                isValidform: false})
+        }
+        console.log(this.state.formPage)
+        console.log(this.state.isValidform)
+    }
+
+    addUser = () => {
+
+        let user = {
+            id: this.state.formPage.id,
+            firstName: this.state.formPage.firstName,
+            lastName: this.state.formPage.lastName,
+            email: this.state.formPage.email,
+            phone: this.state.formPage.phone
+        }
+        this.state.data.unshift(user)
+
+        this.setState({formPage: {
+                id: '',
+                firstName: '',
+                lastName: '',
+                email: '',
+                phone: ''
+            }})
+
+    }
+
+
+    onRowSelect = (row) => (
+        this.setState({row})
+    )
+
+    modeSelect = (url) => {
+        this.setState({
+            isModeSelected: true,
+            isLoading: true,
+        })
+        this.fetchData(url)
+    }
+
+    pageChangeHandler = ({selected}) => (
+        this.setState({currentPage: selected})
+    )
+
+    getFilteredData() {
+        const {data} = this.state
+        return data;
+    }
+
+    searchHandler = search => {
+        this.setState({search, currentPage: 0})
+    }
+
+    getFilteredData() {
+        const {data, search} = this.state
+
+        if (!search) {
+            return data
+        }
+        var result = data.filter(item => {
+            return (
+                item["firstName"].toLowerCase().includes(search.toLowerCase()) ||
+                item["lastName"].toLowerCase().includes(search.toLowerCase()) ||
+                item["email"].toLowerCase().includes(search.toLowerCase())
+            );
+        });
+        if (!result.length) {
+            result = this.state.data
+        }
+        return result
+    }
+
+    render() {
+        const pageSize = 50;
+        if (!this.state.isModeSelected) {
+            return (
+                <div className="container">
+                    <ModeSelector onSelect={this.modeSelect}/>
+                </div>
+            )
+
+        }
+        const filteredData = this.getFilteredData();
+        const pageCount = Math.ceil(filteredData.length / pageSize)
+        const displayData = _.chunk(filteredData, pageSize)[this.state.currentPage]
+
+        return (
+            <div className="App">
+                {
+                    this.state.isLoading
+                        ? <Loader/>
+                        : <React.Fragment>
+                            <TableSearch onSearch={this.searchHandler}/>
+                            <button onClick={this.openForm} type="button"
+                                    className="btn btn-primary mb-3">{this.state.btnName}</button>
+                            {
+                                this.state.isForm ?
+                                    <React.Fragment>
+                                        <Form formPage={this.state.formPage}
+                                              updateForm={this.updateForm} state={this.state}/>
+                                        {
+                                            this.state.isValidform ?<button onClick={this.addUser} class="btn btn-primary mb-3 mt-3">Добавить
+                                            пользователя
+                                        </button>:null}
+                                    </React.Fragment>
+                                    : null}
+                            <Table
+                                data={displayData}
+                                onSort={this.onSort}
+                                sort={this.state.sort}
+                                sortField={this.state.sortField}
+                                onRowSelect={this.onRowSelect}/>
+                        </React.Fragment>
+
+                }
+                {
+                    this.state.data.length > pageSize
+                        ? <ReactPaginate
+                            previousLabel={'<'}
+                            nextLabel={'>'}
+                            breakLabel={'...'}
+                            breakClassName={'break-me'}
+                            pageCount={pageCount}
+                            marginPagesDisplayed={2}
+                            pageRangeDisplayed={5}
+                            onPageChange={this.pageChangeHandler}
+                            containerClassName={'pagination'}
+                            activeClassName={'active'}
+                            pageClassName="page-item"
+                            pageLinkClassName="page-link"
+                            previousClassName="page-item"
+                            nextClassName="page-item"
+                            previousLinkClassName="page-link"
+                            nextLinkClassName="page-link"
+                            forcePage={this.state.currentPage}
+                        /> : null
+                }
+                {
+                    this.state.row ? <DeitailInfo user={this.state.row}/> : null
+                }
+            </div>
+        );
+    }
 }
 
 export default App;
