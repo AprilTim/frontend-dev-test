@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, isValidElement} from 'react';
 import './App.css';
 import Table from "./components/Table/Table";
 import _ from 'lodash';
@@ -81,26 +81,26 @@ class App extends Component {
 
     }
 
-    checkFormPage = (checkValue) =>{
+    checkFormPage = (checkValue) => {
 
-        if(checkValue.id != ''
+        if (checkValue.id != ''
             && checkValue.firstName != ''
             && checkValue.lastName != ''
             && checkValue.email != ''
-            && checkValue.phone != ''){
+            && checkValue.phone != '') {
             this.setState({
-                isValidform: true
+                isValidForm: true
             })
-        }else {
+        } else {
             this.setState({
-                isValidform: false})
+                isValidForm: false
+            })
         }
         console.log(this.state.formPage)
-        console.log(this.state.isValidform)
+        console.log(this.state.isValidForm)
     }
 
     addUser = () => {
-
         let user = {
             id: this.state.formPage.id,
             firstName: this.state.formPage.firstName,
@@ -110,16 +110,18 @@ class App extends Component {
         }
         this.state.data.unshift(user)
 
-        this.setState({formPage: {
-                id: '',
-                firstName: '',
-                lastName: '',
-                email: '',
-                phone: ''
-            }})
-
+        this.setState({
+                isValidForm: false,
+                formPage: {
+                    id: '',
+                    firstName: '',
+                    lastName: '',
+                    email: '',
+                    phone: ''
+                },
+            }
+        )
     }
-
 
     onRowSelect = (row) => (
         this.setState({row})
@@ -137,11 +139,6 @@ class App extends Component {
         this.setState({currentPage: selected})
     )
 
-    getFilteredData() {
-        const {data} = this.state
-        return data;
-    }
-
     searchHandler = search => {
         this.setState({search, currentPage: 0})
     }
@@ -152,7 +149,7 @@ class App extends Component {
         if (!search) {
             return data
         }
-        var result = data.filter(item => {
+        let result = data.filter(item => {
             return (
                 item["firstName"].toLowerCase().includes(search.toLowerCase()) ||
                 item["lastName"].toLowerCase().includes(search.toLowerCase()) ||
@@ -186,18 +183,16 @@ class App extends Component {
                         ? <Loader/>
                         : <React.Fragment>
                             <TableSearch onSearch={this.searchHandler}/>
-                            <button onClick={this.openForm} type="button"
+                            <button onClick={this.openForm}
                                     className="btn btn-primary mb-3">{this.state.btnName}</button>
                             {
                                 this.state.isForm ?
-                                    <React.Fragment>
+                                    <>
                                         <Form formPage={this.state.formPage}
-                                              updateForm={this.updateForm} state={this.state}/>
-                                        {
-                                            this.state.isValidform ?<button onClick={this.addUser} class="btn btn-primary mb-3 mt-3">Добавить
-                                            пользователя
-                                        </button>:null}
-                                    </React.Fragment>
+                                              updateForm={this.updateForm}
+                                              state={this.state}
+                                              addUser={this.addUser}/>
+                                    </>
                                     : null}
                             <Table
                                 data={displayData}

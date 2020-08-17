@@ -1,9 +1,12 @@
 
 .App {
-
   max-width: 1170px;
   text-align: center;
 
   padding-top: 100px;
   margin:  auto;
+}
+
+.btn {
+  min-width: 120px;
 }
