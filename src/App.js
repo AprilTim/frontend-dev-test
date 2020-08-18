@@ -9,7 +9,6 @@ import Loader from "./components/Loader/Loader";
 import TableSearch from "./components/TableSearch/TableSearch";
 import Form from "./components/Form/Form";
 
-
 class App extends Component {
 
     state = {
@@ -43,7 +42,7 @@ class App extends Component {
         })
     }
 
-    onSort = sortField => {
+    onSort = (sortField) => {
         const cloneData = this.state.data.concat()
         const sortType = this.state.sort === 'asc' ? 'desc' : 'asc';
         const orderedData = _.orderBy(cloneData, sortField, sortType);
@@ -53,7 +52,6 @@ class App extends Component {
             sort: sortType,
             sortField
         })
-
     }
 
     openForm = (isForm) => {
@@ -66,19 +64,9 @@ class App extends Component {
         })
     }
 
-    updateForm = (text, check) => {
-        this.setState({
-            formPage: {
-                id: check === "id" ? text : this.state.formPage.id,
-                firstName: check === "firstName" ? text : this.state.formPage.firstName,
-                lastName: check === "lastName" ? text : this.state.formPage.lastName,
-                email: check === "email" ? text : this.state.formPage.email,
-                phone: check === "phone" ? text : this.state.formPage.phone,
-            }
-        })
-
-        this.checkFormPage(this.state.formPage)
-
+    updateForm = (text,check) => {
+        this.setState({formPage: {...this.state.formPage,[check]:text}},
+            () => {this.checkFormPage(this.state.formPage)})
     }
 
     checkFormPage = (checkValue) => {
@@ -96,8 +84,6 @@ class App extends Component {
                 isValidForm: false
             })
         }
-        console.log(this.state.formPage)
-        console.log(this.state.isValidForm)
     }
 
     addUser = () => {
@@ -108,6 +94,7 @@ class App extends Component {
             email: this.state.formPage.email,
             phone: this.state.formPage.phone
         }
+
         this.state.data.unshift(user)
 
         this.setState({
@@ -139,7 +126,7 @@ class App extends Component {
         this.setState({currentPage: selected})
     )
 
-    searchHandler = search => {
+    searchHandler = (search) => {
         this.setState({search, currentPage: 0})
     }
 
@@ -170,8 +157,8 @@ class App extends Component {
                     <ModeSelector onSelect={this.modeSelect}/>
                 </div>
             )
-
         }
+
         const filteredData = this.getFilteredData();
         const pageCount = Math.ceil(filteredData.length / pageSize)
         const displayData = _.chunk(filteredData, pageSize)[this.state.currentPage]
@@ -185,15 +172,13 @@ class App extends Component {
                             <TableSearch onSearch={this.searchHandler}/>
                             <button onClick={this.openForm}
                                     className="btn btn-primary mb-3">{this.state.btnName}</button>
-                            {
-                                this.state.isForm ?
+                            {this.state.isForm ?
                                     <>
                                         <Form formPage={this.state.formPage}
                                               updateForm={this.updateForm}
                                               state={this.state}
                                               addUser={this.addUser}/>
-                                    </>
-                                    : null}
+                                    </> : null}
                             <Table
                                 data={displayData}
                                 onSort={this.onSort}
